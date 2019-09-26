@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Check Google Map</title>
+<style>
+body {
+    margin: 0; 
+    padding: 0
+}
+html, 
+body, 
+#map {
+    height: 100%; 
+    font-family: Arial, sans-serif; 
+    font-size: .9em; 
+    color: #fff;
+}
+#note { 
+    text-align: center;
+    padding: .3em; 10px; 
+    background: #009ee0; 
+}
+.bool {
+    font-style: italic;
+    color: #313131;
+}
+.info {
+    display: inline-block;
+    width: 40%;
+    text-align: center;
+}
+.infowin {
+    color: #313131;
+}
+#title,
+.bool{
+    font-weight: bold;
+}
+#a{
+    font-family: Arial, sans-serif; 
+    font-size: 1.5em; 
+    color: #ffe700;
+}
+</style>
+<script src="http://code.jquery.com/jquery-1.7.1.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAt6BGQfFG5XOtDAUqpWH_2CmcRl0CeTNU"></script>
+<script>
+function showPosition() {
+    if(navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showCircle, showError);
+    } else {
+        alert("Sorry, your browser does not support HTML5 geolocation.");
+    }
+}
+    
+function showCircle(position){
+	// Get location data
+   lat = position.coords.latitude;
+   long = position.coords.longitude;
+
+    var
+        contentCenter = '<span class="infowin">Office</span>',
+		contentCus = '<span class="infowin">Customer</span>';
+    var
+        latLngCenter = new google.maps.LatLng(7.0056546, 100.48016899999999),
+        latLngCMarker = new google.maps.LatLng(7.0056, 100.4801),
+		latLngCus = new google.maps.LatLng(lat, long),
+        map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 16,
+            center: latLngCenter,
+            mapTypeId: google.maps.MapTypeId.ROADMAP,
+            mapTypeControl: false
+        }),
+        markerCenter = new google.maps.Marker({
+            position: latLngCMarker,
+            title: 'Office',
+            map: map,
+            draggable: true
+        }),
+        infoCenter = new google.maps.InfoWindow({
+            content: contentCenter
+        }),
+		markerCus = new google.maps.Marker({
+            position: latLngCus,
+            title: 'Customer',
+            map: map,
+            draggable: true
+        }),
+        infoCus = new google.maps.InfoWindow({
+            content: contentCus
+        }),
+        circle = new google.maps.Circle({
+            map: map,
+            clickable: false,
+            radius: 100,
+            fillColor: '#fff',
+            fillOpacity: .6,
+            strokeColor: '#313131',
+            strokeOpacity: .4,
+            strokeWeight: .8
+        });
+    circle.bindTo('center', markerCenter, 'position');
+
+    var
+        bounds = circle.getBounds(),
+		noteCus = jQuery('.bool#a');
+	noteCus.text(bounds.contains(latLngCus));
+
+	google.maps.event.addListener(markerCenter, 'dragend', function() {
+        latLngCenter = new google.maps.LatLng(markerCenter.position.lat(), markerCenter.position.lng());
+        bounds = circle.getBounds();
+        noteCus.text(bounds.contains(latLngCus));
+    });
+	google.maps.event.addListener(markerCus, 'dragend', function() {
+        latLngCus = new google.maps.LatLng(markerCus.position.lat(), markerCus.position.lng());
+        noteCus.text(bounds.contains(latLngCus));
+    });
+
+	google.maps.event.addListener(markerCenter, 'click', function() {
+        infoCenter.open(map, markerCenter);
+    });
+	google.maps.event.addListener(markerCus, 'click', function() {
+        infoCus.open(map, markerCus);
+    });
+
+	google.maps.event.addListener(markerCenter, 'drag', function() {
+        infoCenter.close();
+        noteCus.html("draggin&hellip;");
+    });
+
+	google.maps.event.addListener(markerCus, 'drag', function() {
+        infoCus.close();
+        noteCus.html("draggin&hellip;");
+    });
+}
+ 
+// Define callback function for failed attempt
+function showError(error) {
+    if(error.code == 1) {
+        alert("You've decided not to share your position, but it's OK. We won't ask you again.");
+    } else if(error.code == 2) {
+        alert("The network is down or the positioning service can't be reached.");
+    } else if(error.code == 3) {
+        alert("The attempt timed out before it could get the location data.");
+    } else {
+        alert("Geolocation failed due to unknown error.");
+    }
+}
+
+</script>
+</head>
+<body onload="showPosition()">
+<div id="note"><span id="title">&raquo;System Time Work&laquo;</span><hr /><span class="info"><strong>Entry Customer</strong>: <span id="a" class="bool"></span></span></div>
+<div id="map"></div>
+</body>
+</html>          
